@@ -1,0 +1,11 @@
+bookdown::gitbook:
+  df_print: paged
+  css: style.css
+  always_allow_html: yes
+  config:
+    self_contained: yes
+    toc:
+      collapse: section
+      before: |
+        <li><a href="./">Цифровая эпиграфика и DH</a></li>
+    sharing: no

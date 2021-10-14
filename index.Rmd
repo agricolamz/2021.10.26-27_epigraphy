@@ -1,0 +1,22 @@
+--- 
+title: "Цифровая эпиграфика на стыке с Digital Humanities"
+author: "Г. Мороз"
+editor_options:
+  chunk_output_type: console
+link-citations: yes
+documentclass: book
+site: bookdown::bookdown_site
+biblio-style: apalike
+---
+
+# О курсе
+
+Это материалы школы по цифровой эпиграфике 2021.
+
+Пакеты:
+
+```{r, eval = FALSE}
+install.packages(c("dplyr",
+                   "ggplot2", 
+                   "leaflet"))
+```
