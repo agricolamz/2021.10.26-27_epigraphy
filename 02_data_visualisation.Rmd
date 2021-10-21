@@ -193,7 +193,13 @@ df %>%
          !is.na(just_year_gre)) %>% 
   select(tombstone_code, name, fathers_name, just_year_gre) %>% 
   pivot_longer(names_to = "type", values_to = "name", name:fathers_name) %>% 
-  mutate(name = str_split(name, " "))
-  
+  mutate(name = str_split(name, " ")) %>% 
+  unnest_longer(name) %>% 
+  arrange(name) ->
+  names_dataset
+
+names_dataset %>% 
+  arrange(names())
+
 ```
 
