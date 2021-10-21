@@ -1,2 +1,184 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup_datavis, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+
 # Визуализация с `ggplot2`
 
+Для начала включим библиотеку
+
+```{r}
+library("tidyverse")
+```
+
+и скачаем датасет:
+
+```{r}
+df <- read_csv("data/sdb_mgl_bsh_rsk_datasets.csv")
+```
+
+## Построим первый график
+
+Сначала сделаем данные для визуализации:
+
+```{r}
+df %>% 
+  count(place)
+```
+
+Теперь сделаем наш первый график:
+
+```{r}
+df %>% 
+  count(place) %>% 
+  ggplot()+
+  aes(x = place, y = n)+
+  geom_col()
+```
+
+
+Мы можем поменять цвет получившегося:
+
+```{r}
+df %>% 
+  count(place) %>% 
+  ggplot()+
+  aes(x = place, y = n)+
+  geom_col(fill = "darkgreen")
+```
+
+Попробуем разбить по полу:
+
+```{r}
+df %>% 
+  count(gender) %>% 
+  ggplot()+
+  aes(x = gender, y = n)+
+  geom_col()
+```
+
+Очень много категорий, давайте оставим только `f`, `m` и `n`:
+
+```{r}
+df %>% 
+  count(gender) %>% 
+  filter(gender == "f" | gender == "m" | gender == "n") %>% 
+  ggplot()+
+  aes(x = gender, y = n)+
+  geom_col()
+```
+
+Получившееся можно разбить по населенному пункту:
+
+```{r}
+df %>% 
+  count(gender, place) %>% 
+  filter(gender == "f" | gender == "m" | gender == "n") %>% 
+  ggplot()+
+  aes(x = gender, y = n, fill = place)+
+  geom_col()
+```
+
+Так графики сложно сравнивать, так что давайте сделаем их рядом:
+
+```{r}
+df %>% 
+  count(gender, place) %>% 
+  filter(gender == "f" | gender == "m" | gender == "n") %>% 
+  ggplot()+
+  aes(x = gender, y = n, fill = place)+
+  geom_col(position = "dodge")
+```
+
+Если мы не хотим сравнивать графики между собой, то их можно развести по разным подграфикам:
+
+```{r}
+df %>% 
+  count(gender, place) %>% 
+  filter(gender == "f" | gender == "m" | gender == "n") %>% 
+  ggplot()+
+  aes(x = gender, y = n)+
+  geom_col(position = "dodge")+
+  facet_wrap(~place)
+```
+
+По умолчанию рисуется одинаковая шкала, но можно это изменить при помощи аргумента `scales = "free"`:
+
+```{r}
+df %>% 
+  count(gender, place) %>% 
+  filter(gender == "f" | gender == "m" | gender == "n") %>% 
+  ggplot()+
+  aes(x = gender, y = n)+
+  geom_col(position = "dodge")+
+  facet_wrap(~place, scales = "free")
+```
+
+Ну что же настал момент, когда можно остановиться и осмыслить то, что мы видим:
+
+* мужских надгробий больше чем женских;
+* в Стародубе больше надгробий, из которых нельзя извлечь информацию про пол усопшего, чем в Мглине.
+
+```{block, type = "rmdtask"}
+Попробуйте воспроизвести график распределения типов надгробий.
+```
+
+```{r, echo = FALSE}
+df %>% 
+  count(tombstone_type, place) %>% 
+  na.omit() %>% 
+  ggplot()+
+  aes(x = tombstone_type, y = n)+
+  geom_col(position = "dodge")+
+  facet_wrap(~place, scales = "free")
+```
+
+## Другие `geom_...`-ы
+
+В `ggplot2` встроены очень много разных `geom_...`-ов (их инвентарь можно посмотреть, просто введя `geom_` и нажав табуляцию). Например, мы можем украсить график, построенный ранее, просто добавив еще один `geom_...`:
+
+```{r}
+df %>% 
+  count(gender, place) %>% 
+  filter(gender == "f" | gender == "m" | gender == "n") %>% 
+  ggplot()+
+  aes(x = gender, y = n, label = n)+
+  geom_col()+
+  geom_label()+
+  facet_wrap(~place, scales = "free")
+```
+
+При этом необходимо помнить, что порядок действий имеет значение, если мы поменяем местами два `geom_...`-а, то получится не самый удачный график:
+
+```{r}
+df %>% 
+  count(gender, place) %>% 
+  filter(gender == "f" | gender == "m" | gender == "n") %>% 
+  ggplot()+
+  aes(x = gender, y = n, label = n)+
+  geom_label()+
+  geom_col()+
+  facet_wrap(~place, scales = "free")
+```
+
+
+
+```{r}
+df %>% 
+  arrange(just_year_gre) %>% 
+  group_by(place, gender) %>% 
+  mutate(value = 1, 
+         sum = cumsum(value)) %>% 
+  ggplot()+
+  aes(just_year_gre, sum, color = gender)+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~place, scales = "free")+
+  labs(x = "", y = "количество надгробий")
+```

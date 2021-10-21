@@ -1,1 +1,106 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 # Работа с картами пакет `leaflet`
+
+
+```{r setup_leaflet, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+
+## Визуализация с `leaflet`
+
+Для начала включим библиотеку:
+
+```{r}
+library("tidyverse")
+library("leaflet")
+```
+
+и скачаем датасет:
+
+```{r}
+df <- read_csv("data/sdb_mgl_bsh_rsk_datasets.csv")
+```
+
+Мы можем нарисовать точки, полученные из кладбища в Стародубе:
+
+```{r}
+df %>% 
+  filter(place == "SDB") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = ~longitude,
+             lat = ~latitude,
+             stroke = NA, 
+             radius = 2,
+             label = ~tombstone_code)
+```
+
+Мы можем раскрасить наши точки на основании пола:
+
+```{r}
+pal_cat <- colorFactor("Set3", domain = df$gender)
+df %>% 
+  filter(place == "SDB") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = ~longitude,
+             lat = ~latitude,
+             stroke = NA, 
+             radius = 2,
+             fillOpacity = 1, 
+             label = ~tombstone_code,
+             color  = ~pal_cat(gender)) %>% 
+  addLegend(pal = pal_cat,
+            values = ~gender,
+            title = "")
+```
+
+Зеленых точек `n` достаточно много, можно попробовать их убрать:
+
+```{r}
+df %>% 
+  filter(place == "SDB",
+         gender != "n") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = ~longitude,
+             lat = ~latitude,
+             stroke = NA, 
+             radius = 2,
+             fillOpacity = 1, 
+             label = ~tombstone_code,
+             color  = ~pal_cat(gender)) %>% 
+  addLegend(pal = pal_cat,
+            values = ~gender,
+            title = "")
+```
+
+Попробуем нарисовать другое
+
+```{r}
+df %>% 
+  filter(place == "BSH",
+         gender != "n") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = ~longitude,
+             lat = ~latitude,
+             stroke = NA, 
+             radius = 2,
+             fillOpacity = 1, 
+             label = ~tombstone_code,
+             color  = ~pal_cat(gender)) %>% 
+  addLegend(pal = pal_cat,
+            values = ~gender,
+            title = "")
+```
+
+
+
+* левиты, коэны
+* роженицы в BSH
