@@ -167,7 +167,9 @@ df %>%
   facet_wrap(~place, scales = "free")
 ```
 
+## Сase studies
 
+### Распределение надгробий по полу в каждом из населенных пунктов
 
 ```{r}
 df %>% 
@@ -182,3 +184,11 @@ df %>%
   facet_wrap(~place, scales = "free")+
   labs(x = "", y = "количество надгробий")
 ```
+
+### Распределение некоторых имен во времени
+
+```{r}
+df %>% 
+  select(tombstone_code, name_la, name, fathers_name, just_year_gre)
+```
+
