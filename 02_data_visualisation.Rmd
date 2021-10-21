@@ -20,7 +20,7 @@ library("tidyverse")
 и скачаем датасет:
 
 ```{r}
-df <- read_csv("data/sdb_mgl_bsh_rsk_datasets.csv")
+df <- read_csv("https://tinyurl.com/yzfgony9")
 ```
 
 ## Построим первый график
@@ -189,6 +189,11 @@ df %>%
 
 ```{r}
 df %>% 
-  select(tombstone_code, name_la, name, fathers_name, just_year_gre)
+  filter(!is.na(name_ru),
+         !is.na(just_year_gre)) %>% 
+  select(tombstone_code, name, fathers_name, just_year_gre) %>% 
+  pivot_longer(names_to = "type", values_to = "name", name:fathers_name) %>% 
+  mutate(name = str_split(name, " "))
+  
 ```
 
