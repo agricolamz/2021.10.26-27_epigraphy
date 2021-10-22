@@ -23,35 +23,69 @@ library("leaflet")
 и скачаем датасет:
 
 ```{r}
-df <- read_csv("data/sdb_mgl_bsh_rsk_datasets.csv")
+df <- read_csv("https://tinyurl.com/yzfgony9")
 ```
 
-Мы можем нарисовать точки, полученные из кладбища в Стародубе:
+Мы можем нарисовать точки, полученные из кладбища 
+
+* в Стародубе:
 
 ```{r}
 df %>% 
-  filter(place == "SDB") %>% 
+  filter(place == "Стародуб") %>% 
   leaflet() %>% 
   addTiles() %>% 
   addCircles(lng = ~longitude,
              lat = ~latitude,
              stroke = NA, 
-             radius = 2,
+             radius = 1,
+             fillOpacity = 1, 
              label = ~tombstone_code)
 ```
 
-Мы можем раскрасить наши точки на основании пола:
+* в Бешенковичах:
+
+```{r}
+df %>% 
+  filter(place == "Бешенковичи") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = ~longitude,
+             lat = ~latitude,
+             stroke = NA, 
+             radius = 1,
+             fillOpacity = 1, 
+             label = ~tombstone_code)
+```
+
+* в Рашкове:
+
+```{r}
+df %>% 
+  filter(place == "Рашков") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = ~longitude,
+             lat = ~latitude,
+             stroke = NA, 
+             radius = 1,
+             fillOpacity = 1, 
+             label = ~tombstone_code)
+```
+
+
+Мы можем раскрасить наши точки на основании гендерной пренадлежности усопшего:
 
 ```{r}
 pal_gender <- colorFactor("Set1", domain = df$gender)
 df %>% 
-  filter(place == "SDB") %>% 
+  filter(place == "Стародуб") %>% 
   leaflet() %>% 
   addTiles() %>% 
   addCircles(lng = ~longitude,
              lat = ~latitude,
              stroke = NA, 
-             radius = 2,
+             radius = 1,
              fillOpacity = 1, 
              label = ~tombstone_code,
              color  = ~pal_gender(gender)) %>% 
@@ -64,14 +98,14 @@ df %>%
 
 ```{r}
 df %>% 
-  filter(place == "SDB",
+  filter(place == "Стародуб",
          gender != "n") %>% 
   leaflet() %>% 
   addTiles() %>% 
   addCircles(lng = ~longitude,
              lat = ~latitude,
              stroke = NA, 
-             radius = 2,
+             radius = 1,
              fillOpacity = 1, 
              label = ~tombstone_code,
              color  = ~pal_gender(gender)) %>% 
@@ -79,27 +113,6 @@ df %>%
             values = ~gender,
             title = "")
 ```
-
-Попробуем нарисовать надгробия с кладбища в Бешенковичах:
-
-```{r}
-df %>% 
-  filter(place == "BSH",
-         gender != "n") %>% 
-  leaflet() %>% 
-  addTiles() %>% 
-  addCircles(lng = ~longitude,
-             lat = ~latitude,
-             stroke = NA, 
-             radius = 2,
-             fillOpacity = 1, 
-             label = ~tombstone_code,
-             color  = ~pal_gender(gender)) %>% 
-  addLegend(pal = pal_gender,
-            values = ~gender,
-            title = "")
-```
-
 
 Попробуем нарисовать кладбище в Бешенковичах и посмотрим, где расположены надгробия с тегами роженица:
 
@@ -112,14 +125,14 @@ df %>%
 pal_labour <- colorFactor("Set1", domain = df$labour)
 
 df %>%   
-  filter(place == "BSH",
+  filter(place == "Бешенковичи",
          !is.na(labour)) %>% 
   leaflet() %>% 
   addTiles() %>% 
   addCircles(lng = ~longitude,
              lat = ~latitude,
              stroke = NA, 
-             radius = 2,
+             radius = 1,
              fillOpacity = 1, 
              label = ~tombstone_code,
              color  = ~pal_labour(labour)) %>% 
@@ -133,7 +146,7 @@ df %>%
 
 ```{r}
 df %>%   
-  filter(place == "BSH",
+  filter(place == "Бешенковичи",
          !is.na(just_year_gre)) %>% 
   group_by(tombstone_code) %>% 
   mutate(id = 1:n()) %>% 

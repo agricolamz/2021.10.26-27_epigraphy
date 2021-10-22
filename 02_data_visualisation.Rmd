@@ -55,46 +55,23 @@ df %>%
   geom_col(fill = "darkgreen")
 ```
 
-Попробуем разбить по полу:
-
-```{r}
-df %>% 
-  count(gender) %>% 
-  ggplot()+
-  aes(x = gender, y = n)+
-  geom_col()
-```
-
-Очень много категорий, давайте оставим только `f`, `m` и `n`:
-
-```{r}
-df %>% 
-  count(gender) %>% 
-  filter(gender == "f" | gender == "m" | gender == "n") %>% 
-  ggplot()+
-  aes(x = gender, y = n)+
-  geom_col()
-```
-
-Получившееся можно разбить по населенному пункту:
+Попробуем добавить гендерную пренадлежность усопших:
 
 ```{r}
 df %>% 
   count(gender, place) %>% 
-  filter(gender == "f" | gender == "m" | gender == "n") %>% 
   ggplot()+
-  aes(x = gender, y = n, fill = place)+
+  aes(x = place, y = n, fill = gender)+
   geom_col()
 ```
 
-Так графики сложно сравнивать, так что давайте сделаем их рядом:
+Так распределения сложно сравнивать, так что давайте сделаем их рядом:
 
 ```{r}
 df %>% 
   count(gender, place) %>% 
-  filter(gender == "f" | gender == "m" | gender == "n") %>% 
   ggplot()+
-  aes(x = gender, y = n, fill = place)+
+  aes(x = place, y = n, fill = gender)+
   geom_col(position = "dodge")
 ```
 
@@ -103,7 +80,6 @@ df %>%
 ```{r}
 df %>% 
   count(gender, place) %>% 
-  filter(gender == "f" | gender == "m" | gender == "n") %>% 
   ggplot()+
   aes(x = gender, y = n)+
   geom_col(position = "dodge")+
@@ -115,7 +91,6 @@ df %>%
 ```{r}
 df %>% 
   count(gender, place) %>% 
-  filter(gender == "f" | gender == "m" | gender == "n") %>% 
   ggplot()+
   aes(x = gender, y = n)+
   geom_col(position = "dodge")+
@@ -134,7 +109,6 @@ df %>%
 ```{r, echo = FALSE}
 df %>% 
   count(tombstone_type, place) %>% 
-  na.omit() %>% 
   ggplot()+
   aes(x = tombstone_type, y = n)+
   geom_col(position = "dodge")+
@@ -206,7 +180,7 @@ df %>%
 
 ### Распределение некоторых имен во времени
 
-Возьмем наш датасет и выясним 5 самых популярных мужских и женских имен
+Возьмем наш датасет и выясним 3 самых популярных мужских и женских имен
 
 ```{r}
 df %>% 
@@ -217,7 +191,7 @@ df %>%
   unnest_longer(name) %>% 
   count(name, gender, sort = TRUE) %>%
   group_by(gender) %>% 
-  top_n(5) ->
+  top_n(3) ->
   top_names
 top_names
 ```
