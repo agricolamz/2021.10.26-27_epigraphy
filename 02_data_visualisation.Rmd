@@ -5,7 +5,9 @@ editor_options:
 ---
 
 ```{r setup_datavis, include=FALSE}
-knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, fig.width = 9, fig.height = 7)
+library("tidyverse")
+theme_set(theme_bw()+theme(text = element_text(size = 14)))
 ```
 
 
@@ -169,7 +171,22 @@ df %>%
 
 ## Сase studies
 
-### Распределение надгробий по полу в каждом из населенных пунктов
+### Гендерное распределение усопших
+
+```{r}
+df %>% 
+  arrange(just_year_gre) %>% 
+  group_by(gender) %>% 
+  mutate(value = 1, 
+         sum = cumsum(value)) %>% 
+  ggplot()+
+  aes(just_year_gre, sum, color = gender)+
+  geom_point()+
+  geom_line()+
+  labs(x = "", y = "количество захоронений")
+```
+
+Какой вывод можно сделать на основании этого графика?
 
 ```{r}
 df %>% 
@@ -182,18 +199,49 @@ df %>%
   geom_point()+
   geom_line()+
   facet_wrap(~place, scales = "free")+
-  labs(x = "", y = "количество надгробий")
+  labs(x = "", y = "количество захоронений")
 ```
 
+Какой вывод можно сделать на основании этого графика?
+
 ### Распределение некоторых имен во времени
+
+Возьмем наш датасет и выясним 5 самых популярных мужских и женских имен
 
 ```{r}
 df %>% 
   filter(!is.na(name_ru),
-         !is.na(just_year_gre)) %>% 
-  select(tombstone_code, name, fathers_name, just_year_gre) %>% 
-  pivot_longer(names_to = "type", values_to = "name", name:fathers_name) %>% 
+         gender != "n") %>% 
+  select(name, gender) %>% 
   mutate(name = str_split(name, " ")) %>% 
-  unnest_longer(name) 
+  unnest_longer(name) %>% 
+  count(name, gender, sort = TRUE) %>%
+  group_by(gender) %>% 
+  top_n(5) ->
+  top_names
+top_names
 ```
 
+Попробуем посмотреть, как эти имена распределены во времени:
+
+```{r}
+df %>% 
+  filter(!is.na(name_ru),
+         !is.na(just_year_gre),
+         gender != "n") %>% 
+  mutate(name = str_split(name, " ")) %>% 
+  unnest_longer(name) %>% 
+  filter(name %in% top_names$name) %>% 
+  arrange(just_year_gre) %>% 
+  mutate(value = 1) %>% 
+  group_by(place, name) %>% 
+  mutate(sum = cumsum(value)) %>% 
+  ggplot()+
+  aes(just_year_gre, sum, color = name)+
+  geom_point()+
+  geom_line()+
+  facet_grid(gender~place, scales = "free")+
+  labs(x = "", y = "количество захоронений")
+```
+
+Какую разницу вы видите между разными населенными пунктами?
