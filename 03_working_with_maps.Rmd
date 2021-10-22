@@ -74,6 +74,8 @@ df %>%
 ```
 
 
+## Расскраска на основании переменной
+
 Мы можем раскрасить наши точки на основании гендерной пренадлежности усопшего:
 
 ```{r}
@@ -125,8 +127,7 @@ df %>%
 pal_labour <- colorFactor("Set1", domain = df$labour)
 
 df %>%   
-  filter(place == "Бешенковичи",
-         !is.na(labour)) %>% 
+  filter(place == "Бешенковичи") %>% 
   leaflet() %>% 
   addTiles() %>% 
   addCircles(lng = ~longitude,
@@ -141,12 +142,63 @@ df %>%
             title = "Распределение рожениц")
 ```
 
+Убитые, оставляем?
 
-Попробуем нарисовать кладбище в Бешенковичах и посмотрим, как оно заполнялось:
+```{r}
+df %>% 
+  mutate(kadosh = str_detect(tags, "(кадош)|(погром)|(убит)"),
+         kadosh = ifelse(is.na(kadosh), FALSE, kadosh)) ->
+  df
+
+pal_kadosh <- colorFactor("Set1", domain = c(TRUE, FALSE), ordered = TRUE)
+
+df %>%   
+  filter(place == "Рашков") %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = ~longitude,
+             lat = ~latitude,
+             stroke = NA, 
+             radius = 1,
+             fillOpacity = 1, 
+             label = ~tombstone_code,
+             color  = ~pal_kadosh(kadosh)) %>% 
+  addLegend(pal = pal_kadosh,
+            values = ~kadosh,
+            title = "Распределение убитых")
+```
+
+Цветом можно задавать не только категориальны данные, но и числовые:
+
+```{r}
+pal_year <- colorNumeric("BrBG", domain = df$just_year_gre)
+
+df %>%   
+  filter(place == "Стародуб",
+         !is.na(just_year_gre),
+         !is.na(latitude)) %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircles(lng = ~longitude,
+             lat = ~latitude,
+             stroke = NA, 
+             radius = 1,
+             fillOpacity = 1, 
+             label = ~tombstone_code,
+             color  = ~pal_year(just_year_gre)) %>% 
+  addLegend(pal = pal_year,
+            values = ~just_year_gre,
+            title = "Распределение по годам")
+```
+
+
+## Динамическое отображение переменной
+
+Попробуем нарисовать кладбище в Рашков и посмотрим в динамике, как оно заполнялось:
 
 ```{r}
 df %>%   
-  filter(place == "Бешенковичи",
+  filter(place == "Рашков",
          !is.na(just_year_gre)) %>% 
   group_by(tombstone_code) %>% 
   mutate(id = 1:n()) %>% 
@@ -155,23 +207,23 @@ df %>%
   mutate(value = 1) %>% 
   arrange(-just_year_gre) %>% 
   pivot_wider(names_from = just_year_gre, values_from = value, values_fill = 0) %>% 
-  pivot_longer(values_to = "value", names_to = "just_year_gre", `1772`:`1968`) %>% 
+  pivot_longer(values_to = "value", names_to = "just_year_gre", `1710`:`1980`) %>% 
   group_by(tombstone_code, id) %>% 
   mutate(value = cumsum(value)) ->
-  bsh_sum
+  rsh_sum
 
 library(leaflet.minicharts)
   
 leaflet() %>% 
   addTiles() %>% 
   addLegend(pal = pal_gender,
-            values = bsh_sum$gender,
+            values = rsh_sum$gender,
             title = "") %>% 
-  addMinicharts(lng = bsh_sum$longitude,
-                lat = bsh_sum$latitude,
-                chartdata = bsh_sum$value,
-                time = as.double(bsh_sum$just_year_gre), 
-                fillColor = pal_gender(bsh_sum$gender),
+  addMinicharts(lng = rsh_sum$longitude,
+                lat = rsh_sum$latitude,
+                chartdata = rsh_sum$value,
+                time = as.double(rsh_sum$just_year_gre), 
+                fillColor = pal_gender(rsh_sum$gender),
                 width = 7)
 ```
 
