@@ -58,9 +58,12 @@ df %>%
              label = ~tombstone_code)
 ```
 
-* в Рашкове:
+```{block, type = "rmdtask"}
+Используя предыдущий код постройте карту кладбища в Рашкове.
+```
 
-```{r}
+
+```{r, echo = FALSE}
 df %>% 
   filter(place == "Рашков") %>% 
   leaflet() %>% 
@@ -74,7 +77,7 @@ df %>%
 ```
 
 
-## Расскраска на основании переменной
+## Раскраска на основании переменной
 
 Мы можем раскрасить наши точки на основании гендерной пренадлежности усопшего:
 
@@ -124,7 +127,7 @@ df %>%
          labour = ifelse(is.na(labour), FALSE, labour)) ->
   df
 
-pal_labour <- colorFactor("Set1", domain = df$labour)
+pal_labour <- colorFactor("Set1", domain = c(TRUE, FALSE), ordered = TRUE)
 
 df %>%   
   filter(place == "Бешенковичи") %>% 
@@ -171,11 +174,11 @@ df %>%
 Цветом можно задавать не только категориальны данные, но и числовые:
 
 ```{r}
-pal_year <- colorNumeric("BrBG", domain = df$just_year_gre)
+pal_year <- colorNumeric("BrBG", domain = df$year)
 
 df %>%   
   filter(place == "Стародуб",
-         !is.na(just_year_gre),
+         !is.na(year),
          !is.na(latitude)) %>% 
   leaflet() %>% 
   addTiles() %>% 
@@ -185,9 +188,9 @@ df %>%
              radius = 1,
              fillOpacity = 1, 
              label = ~tombstone_code,
-             color  = ~pal_year(just_year_gre)) %>% 
+             color  = ~pal_year(year)) %>% 
   addLegend(pal = pal_year,
-            values = ~just_year_gre,
+            values = ~year,
             title = "Распределение по годам")
 ```
 
@@ -199,15 +202,15 @@ df %>%
 ```{r}
 df %>%   
   filter(place == "Рашков",
-         !is.na(just_year_gre)) %>% 
+         !is.na(year)) %>% 
   group_by(tombstone_code) %>% 
   mutate(id = 1:n()) %>% 
   filter(id == 1) %>% 
   ungroup() %>% 
   mutate(value = 1) %>% 
-  arrange(-just_year_gre) %>% 
-  pivot_wider(names_from = just_year_gre, values_from = value, values_fill = 0) %>% 
-  pivot_longer(values_to = "value", names_to = "just_year_gre", `1710`:`1980`) %>% 
+  arrange(-year) %>% 
+  pivot_wider(names_from = year, values_from = value, values_fill = 0) %>% 
+  pivot_longer(values_to = "value", names_to = "year", `1710`:`1980`) %>% 
   group_by(tombstone_code, id) %>% 
   mutate(value = cumsum(value)) ->
   rsh_sum
@@ -222,7 +225,7 @@ leaflet() %>%
   addMinicharts(lng = rsh_sum$longitude,
                 lat = rsh_sum$latitude,
                 chartdata = rsh_sum$value,
-                time = as.double(rsh_sum$just_year_gre), 
+                time = as.double(rsh_sum$year), 
                 fillColor = pal_gender(rsh_sum$gender),
                 width = 7)
 ```

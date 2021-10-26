@@ -55,7 +55,7 @@ df %>%
   geom_col(fill = "darkgreen")
 ```
 
-Попробуем добавить гендерную пренадлежность усопших:
+Попробуем добавить гендерную принадлежность усопших:
 
 ```{r}
 df %>% 
@@ -100,7 +100,7 @@ df %>%
 Ну что же настал момент, когда можно остановиться и осмыслить то, что мы видим:
 
 * мужских надгробий больше чем женских (видите исключение?);
-* в Стародубе больше надгробий, из которых нельзя извлечь информацию про пол усопшего, чем в Рашкове и Бешенковичах.
+* сохранность текстов эпитафий (которые позволяют установить пол покойного) самая высокая в Бешенковичах и самая низкая --- в Стародубе.
 
 ```{block, type = "rmdtask"}
 Попробуйте воспроизвести график распределения типов надгробий.
@@ -122,7 +122,6 @@ df %>%
 ```{r}
 df %>% 
   count(gender, place) %>% 
-  filter(gender == "f" | gender == "m" | gender == "n") %>% 
   ggplot()+
   aes(x = gender, y = n, label = n)+
   geom_col()+
@@ -135,7 +134,6 @@ df %>%
 ```{r}
 df %>% 
   count(gender, place) %>% 
-  filter(gender == "f" | gender == "m" | gender == "n") %>% 
   ggplot()+
   aes(x = gender, y = n, label = n)+
   geom_label()+
@@ -143,79 +141,168 @@ df %>%
   facet_wrap(~place, scales = "free")
 ```
 
+Попробуем вывести вместо абсолютных значений доли. Для этого надо будет вспомнить комбинацию `group_by() %>% summurise()` из предыдущего раздела:
+
+```{r}
+df %>% 
+  count(gender, place)  %>% 
+  group_by(place) %>% 
+  mutate(ratio = n/sum(n),
+         ratio = round(ratio, 3)) %>% # округлим до 3 знаков после запятой
+  ggplot()+
+  aes(x = gender, y = n, label = ratio)+
+  geom_col()+
+  geom_label()+
+  facet_wrap(~place, scales = "free")
+```
+
+
 ## Сase studies
 
 ### Гендерное распределение усопших
 
+Посмотрим на распределение надгробий по десятилетиям:
+
 ```{r}
 df %>% 
-  arrange(just_year_gre) %>% 
+  filter(!is.na(year)) %>% 
+  mutate(decade = floor(year/10)*10) %>% 
+  count(decade, gender, place) %>% 
+  ggplot()+
+  aes(decade, n, fill = gender)+
+  geom_col(position = "dodge")+
+  labs(x = "", y = "количество захоронений")+
+  facet_wrap(~place, scales = "free", nrow = 3)
+```
+
+
+```{r}
+df %>% 
+  filter(!is.na(year)) %>%
+  arrange(year) %>% 
   group_by(gender) %>% 
   mutate(value = 1, 
          sum = cumsum(value)) %>% 
   ggplot()+
-  aes(just_year_gre, sum, color = gender)+
+  aes(year, sum, color = gender)+
   geom_point()+
   geom_line()+
-  labs(x = "", y = "количество захоронений")
+  labs(x = "", y = "кумулятивное количество захоронений")
 ```
 
 Какой вывод можно сделать на основании этого графика?
 
 ```{r}
 df %>% 
-  arrange(just_year_gre) %>% 
+  filter(!is.na(year)) %>%
+  arrange(year) %>% 
   group_by(place, gender) %>% 
   mutate(value = 1, 
          sum = cumsum(value)) %>% 
   ggplot()+
-  aes(just_year_gre, sum, color = gender)+
+  aes(year, sum, color = gender)+
   geom_point()+
   geom_line()+
-  facet_wrap(~place, scales = "free")+
-  labs(x = "", y = "количество захоронений")
+  facet_wrap(~place, scales = "free", nrow = 3)+
+  labs(x = "", y = "кумулятивное количество захоронений")
 ```
 
 Какой вывод можно сделать на основании этого графика?
 
 ### Распределение некоторых имен во времени
 
-Возьмем наш датасет и выясним 3 самых популярных мужских и женских имен
+Возьмем наш датасет и выясним 10 самых популярных мужских и женских имен:
 
 ```{r}
 df %>% 
-  filter(!is.na(name_ru),
+  filter(!is.na(name),
          gender != "n") %>% 
-  select(name, gender) %>% 
   mutate(name = str_split(name, " ")) %>% 
   unnest_longer(name) %>% 
   count(name, gender, sort = TRUE) %>%
   group_by(gender) %>% 
-  top_n(3) ->
-  top_names
-top_names
+  top_n(10) %>% 
+  ungroup() %>% 
+  mutate(name = fct_reorder(name, n)) %>% 
+  ggplot()+
+  aes(n, name)+
+  geom_col()+
+  facet_wrap(~gender, scales = "free")
 ```
 
-Попробуем посмотреть, как эти имена распределены во времени:
-
+Мы также можем посмотреть на распределение в каждом населенном пункте:
 ```{r}
+library(tidytext) # этот пакет нужен для функции reorder_within()
 df %>% 
-  filter(!is.na(name_ru),
-         !is.na(just_year_gre),
+  filter(!is.na(name),
          gender != "n") %>% 
   mutate(name = str_split(name, " ")) %>% 
   unnest_longer(name) %>% 
-  filter(name %in% top_names$name) %>% 
-  arrange(just_year_gre) %>% 
+  count(name, gender, place, sort = TRUE) %>%
+  group_by(place, gender) %>% 
+  top_n(10) %>% 
+  ungroup() %>% 
+  mutate(name = reorder_within(name, by = n, within = place)) %>% 
+  ggplot()+
+  aes(n, name)+
+  geom_col()+
+  facet_wrap(gender~place, scales = "free")+
+  scale_y_reordered()
+```
+
+Попробуем посмотреть, как эти имена распределены во времени. Для начала создадим датасет с самыми популярными именами:
+
+```{r}
+df %>% 
+  filter(!is.na(name),
+         gender != "n") %>% 
+  mutate(name = str_split(name, " ")) %>% 
+  unnest_longer(name) %>% 
+  count(name, gender, sort = TRUE) %>%
+  group_by(gender) %>% 
+  top_n(3) %>% 
+  pull(name) ->
+  popular_names
+popular_names
+```
+
+
+```{r, include=FALSE}
+df %>% 
+  filter(!is.na(name),
+         !is.na(year),
+         gender != "n") %>% 
+  mutate(name = str_split(name, " ")) %>% 
+  unnest_longer(name) %>% 
+  filter(name %in% popular_names) %>% 
+  mutate(decade = floor(year/10)*10) %>% 
+  count(decade, name, gender, place) %>% 
+  ggplot()+
+  aes(decade, n, fill = name)+
+  geom_col(position = "dodge")+
+  facet_grid(place~gender, scales = "free")+
+  labs(x = "", y = "количество захоронений")
+```
+
+```{r}
+df %>% 
+  filter(!is.na(name),
+         !is.na(year),
+         gender != "n") %>% 
+  mutate(name = str_split(name, " ")) %>% 
+  unnest_longer(name) %>% 
+  filter(name %in% popular_names) %>% 
+  arrange(year) %>% 
   mutate(value = 1) %>% 
   group_by(place, name) %>% 
   mutate(sum = cumsum(value)) %>% 
   ggplot()+
-  aes(just_year_gre, sum, color = name)+
+  aes(year, sum, color = name)+
   geom_point()+
   geom_line()+
   facet_grid(gender~place, scales = "free")+
   labs(x = "", y = "количество захоронений")
 ```
+
 
 Какую разницу вы видите между разными населенными пунктами?
