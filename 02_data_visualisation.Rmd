@@ -209,6 +209,19 @@ df %>%
 
 Какой вывод можно сделать на основании этого графика?
 
+### Распределение мучеников
+
+```{r}
+df %>% 
+  filter(place == "Рашков") %>% 
+  mutate(kadosh = str_detect(tags, "кадош"),
+         kadosh = ifelse(is.na(kadosh), FALSE, kadosh)) %>% 
+  ggplot()+
+  aes(x = year, fill = kadosh)+
+  geom_histogram()+
+  labs(x = "год", y = "количество захоронений")
+```
+
 ### Распределение некоторых имен во времени
 
 Возьмем наш датасет и выясним 10 самых популярных мужских и женских имен:
@@ -302,6 +315,25 @@ df %>%
   geom_line()+
   facet_grid(gender~place, scales = "free")+
   labs(x = "", y = "количество захоронений")
+```
+
+
+```{r, eval = FALSE}
+df %>% 
+  filter(!is.na(name),
+         !is.na(year),
+         gender != "n") %>% 
+  mutate(name = str_split(name, " ")) %>% 
+  unnest_longer(name) %>% 
+  filter(name %in% popular_names) %>% 
+  count()
+
+    ggplot()+
+  aes(year, sum, color = gender)+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~place, scales = "free", nrow = 3)+
+  labs(x = "", y = "кумулятивное количество захоронений")
 ```
 
 
