@@ -161,16 +161,14 @@ df %>%
 
 ### Гендерное распределение усопших
 
-Посмотрим на распределение надгробий по десятилетиям:
+Посмотрим на распределение надгробий во времени:
 
 ```{r}
 df %>% 
   filter(!is.na(year)) %>% 
-  mutate(decade = floor(year/10)*10) %>% 
-  count(decade, gender, place) %>% 
   ggplot()+
-  aes(decade, n, fill = gender)+
-  geom_col(position = "dodge")+
+  aes(year, fill = gender)+
+  geom_histogram()+
   labs(x = "", y = "количество захоронений")+
   facet_wrap(~place, scales = "free", nrow = 3)
 ```
@@ -318,21 +316,18 @@ df %>%
 ```
 
 
-```{r, eval = FALSE}
+```{r}
 df %>% 
   filter(!is.na(name),
          !is.na(year),
          gender != "n") %>% 
   mutate(name = str_split(name, " ")) %>% 
   unnest_longer(name) %>% 
-  filter(name %in% popular_names) %>% 
-  count()
-
-    ggplot()+
-  aes(year, sum, color = gender)+
-  geom_point()+
-  geom_line()+
-  facet_wrap(~place, scales = "free", nrow = 3)+
+  mutate(name = ifelse(name %in% popular_names, name, "другие")) %>% 
+  ggplot()+
+  aes(year, fill = name)+
+  geom_histogram()+
+  facet_wrap(gender~place, scales = "free", nrow = 2)+
   labs(x = "", y = "кумулятивное количество захоронений")
 ```
 
