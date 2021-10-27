@@ -170,7 +170,7 @@ df %>%
   aes(year, fill = gender)+
   geom_histogram()+
   labs(x = "", y = "количество захоронений")+
-  facet_wrap(~place, scales = "free", nrow = 3)
+  facet_wrap(~place, scales = "free_y", nrow = 3)
 ```
 
 
@@ -201,7 +201,7 @@ df %>%
   aes(year, sum, color = gender)+
   geom_point()+
   geom_line()+
-  facet_wrap(~place, scales = "free", nrow = 3)+
+  facet_wrap(~place, scales = "free_y", nrow = 3)+
   labs(x = "", y = "кумулятивное количество захоронений")
 ```
 
@@ -288,7 +288,7 @@ df %>%
   ggplot()+
   aes(year, fill = name)+
   geom_histogram()+
-  facet_wrap(gender~place, scales = "free", nrow = 2)+
+  facet_wrap(gender~place, scales = "free_y", nrow = 2)+
   labs(x = "", y = "количество захоронений")
 ```
 
