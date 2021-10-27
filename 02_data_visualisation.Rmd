@@ -277,21 +277,18 @@ df %>%
 popular_names
 ```
 
-
-```{r, include=FALSE}
+```{r}
 df %>% 
   filter(!is.na(name),
          !is.na(year),
          gender != "n") %>% 
   mutate(name = str_split(name, " ")) %>% 
   unnest_longer(name) %>% 
-  filter(name %in% popular_names) %>% 
-  mutate(decade = floor(year/10)*10) %>% 
-  count(decade, name, gender, place) %>% 
+  mutate(name = ifelse(name %in% popular_names, name, "другие")) %>% 
   ggplot()+
-  aes(decade, n, fill = name)+
-  geom_col(position = "dodge")+
-  facet_grid(place~gender, scales = "free")+
+  aes(year, fill = name)+
+  geom_histogram()+
+  facet_wrap(gender~place, scales = "free", nrow = 2)+
   labs(x = "", y = "количество захоронений")
 ```
 
@@ -314,22 +311,5 @@ df %>%
   facet_grid(gender~place, scales = "free")+
   labs(x = "", y = "количество захоронений")
 ```
-
-
-```{r}
-df %>% 
-  filter(!is.na(name),
-         !is.na(year),
-         gender != "n") %>% 
-  mutate(name = str_split(name, " ")) %>% 
-  unnest_longer(name) %>% 
-  mutate(name = ifelse(name %in% popular_names, name, "другие")) %>% 
-  ggplot()+
-  aes(year, fill = name)+
-  geom_histogram()+
-  facet_wrap(gender~place, scales = "free", nrow = 2)+
-  labs(x = "", y = "кумулятивное количество захоронений")
-```
-
 
 Какую разницу вы видите между разными населенными пунктами?
